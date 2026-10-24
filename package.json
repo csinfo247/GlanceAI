@@ -1,0 +1,63 @@
+{
+  "name": "glanceai",
+  "version": "1.0.0",
+  "description": "Open-source, cross-platform developer overlay for macOS, Windows & Linux with live audio transcription, Groq ultra-low-latency vision & deep reasoning models, and screen-share privacy.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:bg": "nohup electron . > /dev/null 2>&1 &",
+    "bg": "nohup electron . > /dev/null 2>&1 &",
+    "stop": "pkill -f 'electron .' 2>/dev/null || true; pkill -f 'ngrok http' 2>/dev/null || true",
+    "dev": "cross-env DEBUG=true electron .",
+    "tunnel": "node scripts/tunnel.js",
+    "mentor": "node scripts/tunnel.js",
+    "lint": "eslint .",
+    "test": "npm run lint && npm run test:syntax && npm run test:diagnostics && npm run test:prompts && npm run test:router && npm run test:stream && npm run test:edge-cases",
+    "test:syntax": "node -c main.js && node -c preload.js && node -c renderer.js && node -c companion-server.js && node -c lib/interview-engine.js && node -c lib/prompts.js && node -c lib/llm/models.js && node -c lib/llm/providers.js && node -c lib/llm/router.js && node -c lib/notch-geometry.js",
+    "test:diagnostics": "node scripts/diagnostics.js",
+    "test:prompts": "node test-prompts.js",
+    "test:router": "node test-llm-router.js",
+    "test:stream": "node test-groq-stream.js",
+    "test:benchmark": "node test-benchmarks.js",
+    "test:edge-cases": "node test-edge-cases.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/csinfo247/GlanceAI"
+  },
+  "keywords": [
+    "electron",
+    "cross-platform",
+    "macos",
+    "windows",
+    "linux",
+    "hud",
+    "overlay",
+    "groq",
+    "llama3",
+    "deepgram",
+    "audio-transcription",
+    "screen-capture",
+    "interview-assistant",
+    "open-source"
+  ],
+  "author": "GlanceAI Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "groq-sdk": "^0.9.0",
+    "https-proxy-agent": "^9.1.0",
+    "mammoth": "^1.13.0",
+    "pdf-parse": "^2.4.5",
+    "socks-proxy-agent": "^10.1.0"
+  },
+  "devDependencies": {
+    "acorn": "^8.18.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  }
+}

@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GlanceAI Duo Mode — Remote Mentor Portal</title>
+  <style>
+    :root {
+      --bg-dark: #070b12;
+      --bg-card: rgba(15, 23, 42, 0.85);
+      --bg-card-hover: rgba(30, 41, 59, 0.9);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(56, 189, 248, 0.3);
+      --border-whisper: rgba(245, 158, 11, 0.4);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-purple: #a855f7;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      padding-bottom: 24px;
+      overflow-x: hidden;
+    }
+
+    /* Header Bar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(7, 11, 18, 0.95);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      font-size: 20px;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #fff;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+    }
+
+    .status-dot.connected {
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    /* Main Container Grid */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(12px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Whisper Dispatcher Console */
+    .whisper-card {
+      border: 1px solid var(--border-whisper);
+      background: linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
+    }
+
+    .whisper-card .card-title {
+      color: var(--accent-amber);
+    }
+
+    .quick-chips-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: #e2e8f0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-chip:hover {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .whisper-input-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .whisper-textarea {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-family: var(--font-family);
+      font-size: 13px;
+      resize: vertical;
+      min-height: 70px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .whisper-textarea:focus {
+      border-color: var(--accent-amber);
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+
+    .whisper-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-send-whisper {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-send-whisper:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Active Question Card */
+    .active-question-card {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid var(--border-accent);
+      border-left: 4px solid var(--accent-blue);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .q-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .q-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    /* Markdown Body */
+    .teleprompter-box {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .teleprompter-box blockquote {
+      background: rgba(56, 189, 248, 0.1);
+      border-left: 3px solid var(--accent-blue);
+      padding: 8px 12px;
+      margin: 8px 0;
+      border-radius: 0 6px 6px 0;
+      font-weight: 600;
+      color: #f0f9ff;
+    }
+
+    .teleprompter-box pre {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 10px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin: 10px 0;
+    }
+
+    /* Transcript Log */
+    .transcript-log {
+      max-height: 320px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .transcript-entry {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .entry-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .speaker-tag {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    .speaker-tag.interviewer {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-blue);
+    }
+
+    .speaker-tag.candidate {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent-green);
+    }
+
+    .entry-text {
+      font-size: 12.5px;
+      color: #f1f5f9;
+    }
+
+    /* Sent Whispers Log */
+    .whisper-history {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .whisper-history-item {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 2px solid var(--accent-amber);
+      padding: 6px 10px;
+      border-radius: 0 4px 4px 0;
+      font-size: 12px;
+    }
+
+    .whisper-time {
+      font-size: 9.5px;
+      color: var(--accent-amber);
+      font-weight: 700;
+    }
+
+    /* Screenshot Preview */
+    .screen-preview-img {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      display: none;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e293b;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--accent-amber);
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 1000;
+    }
+    /* Audio Monitor Strip */
+    .audio-monitor-bar {
+      max-width: 1200px;
+      margin: 14px auto 0 auto;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 16, 30, 0.95) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(16px);
+    }
+
+    .audio-monitor-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .audio-indicator-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .audio-live-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #64748b;
+      transition: all 0.25s ease;
+    }
+
+    .audio-live-dot.active {
+      background: var(--accent-blue);
+      box-shadow: 0 0 10px var(--accent-blue);
+    }
+
+    .audio-live-dot.listening {
+      background: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green);
+      animation: pulseGlow 1.8s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.75; }
+    }
+
+    .audio-meta {
+      min-width: 0;
+    }
+
+    .audio-meta-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .audio-title-text {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.2px;
+    }
+
+    .audio-chip {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .audio-chip-codec {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .audio-chip-latency {
+      background: rgba(148, 163, 184, 0.12);
+      color: var(--text-muted);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .audio-chip-active {
+      background: rgba(16, 185, 129, 0.18);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+    }
+
+    .audio-meta-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    /* Equalizer */
+    .eq-visualizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 28px;
+      padding: 3px 10px;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .eq-bar {
+      width: 4px;
+      height: 4px;
+      border-radius: 2px;
+      background: #475569;
+      transition: height 0.08s ease, background 0.2s ease;
+    }
+
+    .eq-visualizer.active .eq-bar {
+      background: linear-gradient(to top, var(--accent-blue), var(--accent-green));
+      animation: eqBounce 0.8s ease-in-out infinite alternate;
+      animation-delay: calc(var(--i) * 0.09s);
+    }
+
+    @keyframes eqBounce {
+      0% { height: 4px; }
+      50% { height: 16px; }
+      100% { height: 24px; }
+    }
+
+    /* Audio Controls */
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .vol-control-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-mute {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      transition: color 0.15s ease;
+    }
+
+    .btn-mute:hover {
+      color: #fff;
+    }
+
+    .vol-slider {
+      width: 80px;
+      height: 4px;
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    .vol-value {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      width: 28px;
+      text-align: right;
+    }
+
+    .btn-listen-toggle {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #fff;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .btn-listen-toggle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    }
+
+    .btn-listen-toggle.active {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-color: rgba(16, 185, 129, 0.6);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+    }
+
+    @media (max-width: 900px) {
+      .audio-monitor-bar {
+        margin: 12px 12px 0 12px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .audio-controls {
+        justify-content: space-between;
+      }
+      .vol-slider {
+        width: 100px;
+      }
+    }
+  </style>
+</head>
+<body id="glanceai-mentor-root">
+
+  <header>
+    <div class="brand-wrap">
+      <span class="brand-icon">🛡️</span>
+      <span class="brand-title">GlanceAI Duo Mode</span>
+      <span class="brand-badge">Mentor Portal</span>
+    </div>
+    <div class="status-badge" id="status-badge">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Connecting...</span>
+    </div>
+  </header>
+
+  <!-- Live Call Audio Stream Bar -->
+  <section class="audio-monitor-bar" id="audio-monitor-bar" aria-label="Interviewer Audio Monitor">
+    <div class="audio-monitor-left">
+      <div class="audio-indicator-wrap" id="audio-indicator-wrap">
+        <span class="audio-live-dot" id="audio-live-dot"></span>
+      </div>
+      <div class="audio-meta">
+        <div class="audio-meta-title">
+          <span class="audio-title-text">🎧 Interviewer Voice Channel</span>
+          <span class="audio-chip audio-chip-codec">WebM Opus</span>
+          <span class="audio-chip audio-chip-latency" id="audio-latency-chip">Standby</span>
+        </div>
+        <div class="audio-meta-desc" id="audio-status-label">Tab audio captured from candidate browser — ready to stream</div>
+      </div>
+    </div>
+
+    <!-- Equalizer Visualizer -->
+    <div class="eq-visualizer" id="eq-visualizer" title="Live audio activity">
+      <div class="eq-bar" style="--i: 1"></div>
+      <div class="eq-bar" style="--i: 2"></div>
+      <div class="eq-bar" style="--i: 3"></div>
+      <div class="eq-bar" style="--i: 4"></div>
+      <div class="eq-bar" style="--i: 5"></div>
+      <div class="eq-bar" style="--i: 6"></div>
+      <div class="eq-bar" style="--i: 7"></div>
+      <div class="eq-bar" style="--i: 8"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="audio-controls">
+      <div class="vol-control-wrap">
+        <button class="btn-mute" id="btn-vol-mute" title="Mute/Unmute audio">🔊</button>
+        <input type="range" class="vol-slider" id="audio-vol-slider" min="0" max="100" value="85" title="Volume slider">
+        <span class="vol-value" id="vol-value">85%</span>
+      </div>
+
+      <button class="btn-listen-toggle" id="btn-listen-toggle">
+        <span class="listen-btn-icon" id="listen-btn-icon">▶</span>
+        <span id="listen-btn-text">Listen Live</span>
+      </button>
+    </div>
+  </section>
+
+  <audio id="mentor-live-audio" preload="none" crossorigin="anonymous" playsinline style="display: none;"></audio>
+
+  <main>
+    <!-- Left Column: Live Call Teleprompter & Transcripts -->
+    <div class="left-col">
+      
+      <!-- Current Question & Solution -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🎯 Live Candidate Teleprompter</span>
+          <span class="badge" id="model-badge" style="font-size: 10px; color: var(--accent-blue);">Groq Stream</span>
+        </div>
+
+        <div class="active-question-card" id="active-question-card">
+          <span class="q-label">Interviewer Question</span>
+          <div class="q-text" id="active-question-text">Listening for questions...</div>
+        </div>
+
+        <div class="teleprompter-box" id="solution-box">
+          <p style="color: var(--text-muted); font-style: italic;">Candidate solution talking points will stream here in real time as Groq reasons.</p>
+        </div>
+      </div>
+
+      <!-- Live Interview Audio Transcripts -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🎙️ Live Call Audio Stream</span>
+          <span id="transcript-count" style="font-size: 10px; color: var(--text-muted);">0 turns</span>
+        </div>
+        <div class="transcript-log" id="transcript-log">
+          <p style="color: var(--text-muted); font-style: italic; font-size: 12px;">Waiting for audio packets from interview call...</p>
+        </div>
+      </div>
+
+      <!-- Candidate Screen Capture Thumbnail -->
+      <div class="card" id="screen-card">
+        <div class="card-header">
+          <span class="card-title">🖥️ Candidate Screen Preview</span>
+          <button class="btn-chip" id="btn-trigger-screen" style="padding: 3px 8px; font-size: 10px;">📸 Trigger Screen Snap</button>
+        </div>
+        <img class="screen-preview-img" id="screen-preview-img" alt="Candidate Screen">
+        <p id="screen-empty-hint" style="color: var(--text-muted); font-style: italic; font-size: 12px;">No screenshot captured yet.</p>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Duo Mode Whisper Console -->
+    <div class="right-col">
+      
+      <div class="card whisper-card">
+        <div class="card-header">
+          <span class="card-title">🛡️ Live Mentor Whisper Console</span>
+          <span style="font-size: 10px; color: var(--accent-amber); font-weight: 700;">HUD Inject</span>
+        </div>
+        <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;">
+          Hints you send will immediately flash inside the candidate's active teleprompter HUD in real time.
+        </p>
+
+        <!-- Quick Preset Action Chips -->
+        <div class="quick-chips-grid">
+          <button class="btn-chip whisper-preset-chip" data-whisper="💡 Mention O(1) space optimization">💡 Mention O(1) space</button>
+          <button class="btn-chip whisper-preset-chip" data-whisper="⚠️ Check edge cases: empty array or duplicate elements">⚠️ Check edge cases</button>
+          <button class="btn-chip whisper-preset-chip" data-whisper="🔄 Suggest sorting first + Two Pointers approach">🔄 Suggest Two Pointers</button>
+          <button class="btn-chip whisper-preset-chip" data-whisper="⚡ Ask a clarifying question about constraints first">⚡ Ask constraints</button>
+          <button class="btn-chip whisper-preset-chip" data-whisper="⏱️ Slow down your speaking pace and take a breath">⏱️ Slow down pace</button>
+          <button class="btn-chip whisper-preset-chip" data-whisper="🛑 Stop talking now — you answered the question completely">🛑 Wrap up / Stop</button>
+        </div>
+
+        <!-- Custom Input -->
+        <div class="whisper-input-wrap">
+          <textarea class="whisper-textarea" id="custom-whisper" placeholder="Type custom hint or code tip to candidate... (Press Enter to Send)" rows="3"></textarea>
+          <div class="whisper-actions">
+            <span style="font-size: 10.5px; color: var(--text-muted);">Enter = Send</span>
+            <button class="btn-send-whisper" id="btn-send-whisper">
+              <span>🚀 Send Whisper</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Whisper History -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📜 Whispers Sent This Session</span>
+        </div>
+        <div class="whisper-history" id="whisper-history">
+          <p style="color: var(--text-muted); font-size: 11.5px; font-style: italic;">No whispers sent yet.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // SSE Stream Connection
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const activeQuestionCard = document.getElementById('active-question-card');
+    const activeQuestionText = document.getElementById('active-question-text');
+    const solutionBox = document.getElementById('solution-box');
+    const transcriptLog = document.getElementById('transcript-log');
+    const screenPreviewImg = document.getElementById('screen-preview-img');
+    const screenEmptyHint = document.getElementById('screen-empty-hint');
+    const customWhisper = document.getElementById('custom-whisper');
+    const btnSendWhisper = document.getElementById('btn-send-whisper');
+    const btnTriggerScreen = document.getElementById('btn-trigger-screen');
+    const whisperHistory = document.getElementById('whisper-history');
+    const toast = document.getElementById('toast');
+
+    // Live Interviewer Audio Monitor Controls
+    const liveAudioEl = document.getElementById('mentor-live-audio');
+    const btnListenToggle = document.getElementById('btn-listen-toggle');
+    const listenBtnIcon = document.getElementById('listen-btn-icon');
+    const listenBtnText = document.getElementById('listen-btn-text');
+    const audioStatusLabel = document.getElementById('audio-status-label');
+    const audioLiveDot = document.getElementById('audio-live-dot');
+    const eqVisualizer = document.getElementById('eq-visualizer');
+    const audioVolSlider = document.getElementById('audio-vol-slider');
+    const volValue = document.getElementById('vol-value');
+    const btnVolMute = document.getElementById('btn-vol-mute');
+    const audioLatencyChip = document.getElementById('audio-latency-chip');
+
+    let isListening = false;
+    let isMuted = false;
+    let preMuteVolume = 0.85;
+    let audioContext = null;
+    let analyserNode = null;
+    let audioSourceNode = null;
+    let visualizerAnimFrame = null;
+
+    let solutionBuffer = '';
+    let transcriptTurns = 0;
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2600);
+    }
+
+    function getAuthToken() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let token = urlParams.get('token');
+      if (token) {
+        try { localStorage.setItem('glanceai_mentor_token', token); } catch (_) {}
+        return token;
+      }
+      try {
+        token = localStorage.getItem('glanceai_mentor_token') || '';
+      } catch (_) {}
+      return token;
+    }
+
+    function initSSE() {
+      const authToken = getAuthToken();
+      const streamUrl = authToken ? `/api/stream?token=${encodeURIComponent(authToken)}` : '/api/stream';
+      const eventSource = new EventSource(streamUrl);
+
+      eventSource.onopen = () => {
+        statusDot.className = 'status-dot connected';
+        statusText.textContent = 'Live Sync Active';
+      };
+
+      eventSource.onerror = () => {
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Reconnecting...';
+      };
+
+      // Realtime Audio Transcripts
+      eventSource.addEventListener('transcript', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.text) {
+            const rawText = data.text.trim();
+            if (!rawText) return;
+
+            const lines = rawText.split('\n').filter(Boolean);
+            document.getElementById('transcript-count').textContent = `${lines.length} turns`;
+
+            transcriptLog.innerHTML = lines.map((line) => {
+              const isCandidate = line.startsWith('CANDIDATE:');
+              const speaker = isCandidate ? 'CANDIDATE' : 'INTERVIEWER';
+              const cleanText = line.replace(/^(CANDIDATE|INTERVIEWER):\s*/i, '');
+              return `
+                <div class="transcript-entry">
+                  <div class="entry-header">
+                    <span class="speaker-tag ${speaker.toLowerCase()}">${speaker}</span>
+                  </div>
+                  <div class="entry-text">${escapeHtml(cleanText)}</div>
+                </div>
+              `;
+            }).join('');
+            transcriptLog.scrollTop = transcriptLog.scrollHeight;
+          }
+        } catch (_) {}
+      });
+
+      // Groq Stream Start & Target Question
+      eventSource.addEventListener('groq_start', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          // Main process sends the clean, already-sanitized display question
+          const target = (data.targetQuestionDisplay || '').trim();
+          if (target) {
+            activeQuestionText.textContent = target;
+            activeQuestionCard.style.display = 'block';
+          }
+          solutionBuffer = '';
+          solutionBox.innerHTML = '<span style="color: var(--accent-blue); font-size: 11px;">⚡ Teleprompter streaming...</span>';
+        } catch (_) {}
+      });
+
+      // Groq Stream Chunk
+      eventSource.addEventListener('groq_chunk', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          solutionBuffer += data.chunk;
+          renderMarkdown(solutionBuffer);
+        } catch (_) {}
+      });
+
+      // Screen Capture Broadcast
+      eventSource.addEventListener('screenshot', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.dataUrl) {
+            screenPreviewImg.src = data.dataUrl;
+            screenPreviewImg.style.display = 'block';
+            screenEmptyHint.style.display = 'none';
+          }
+        } catch (_) {}
+      });
+
+      // Mentor Whisper Broadcast confirmation
+      eventSource.addEventListener('mentor_whisper', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          appendWhisperHistory(data.whisper, data.author || 'Mentor');
+        } catch (_) {}
+      });
+
+      // Live Tab Audio Activity Heartbeat
+      eventSource.addEventListener('tab_audio_state', (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.active) {
+            audioLiveDot.className = isListening ? 'audio-live-dot listening' : 'audio-live-dot active';
+            if (!isListening) {
+              audioStatusLabel.textContent = 'Interviewer speaking live • Click Listen Live to hear';
+            }
+          }
+        } catch (_) {}
+      });
+    }
+
+    function renderMarkdown(md) {
+      let html = escapeHtml(md);
+      html = html.replace(/&gt;\s*"(.*?)"/g, '<blockquote>"$1"</blockquote>');
+      html = html.replace(/```(?:cpp|python|java|javascript)?\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      solutionBox.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function appendWhisperHistory(text, author = 'Mentor') {
+      if (whisperHistory.querySelector('p')) {
+        whisperHistory.innerHTML = '';
+      }
+      const item = document.createElement('div');
+      item.className = 'whisper-history-item';
+      item.innerHTML = `
+        <div class="whisper-time">${escapeHtml(author)} • ${new Date().toLocaleTimeString()}</div>
+        <div style="margin-top: 2px;">${escapeHtml(text)}</div>
+      `;
+      whisperHistory.prepend(item);
+    }
+
+    async function sendWhisper(text) {
+      const clean = text.trim();
+      if (!clean) return;
+
+      const authToken = getAuthToken();
+      const headers = {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
+      };
+      if (authToken) {
+        headers['X-GlanceAI-Token'] = authToken;
+      }
+
+      try {
+        const res = await fetch('/api/mentor/whisper', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ whisper: clean, author: 'Mentor' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('🛡️ Whisper injected into candidate HUD!');
+          customWhisper.value = '';
+        } else {
+          showToast('⚠️ Error: ' + (data.error || 'Failed to dispatch'));
+        }
+      } catch (err) {
+        showToast('⚠️ Network Error: ' + err.message);
+      }
+    }
+
+    // Event Listeners
+    btnSendWhisper.addEventListener('click', () => {
+      sendWhisper(customWhisper.value);
+    });
+
+    customWhisper.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendWhisper(customWhisper.value);
+      }
+    });
+
+    // Preset chip clicks
+    document.querySelectorAll('.btn-chip[data-whisper]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sendWhisper(btn.dataset.whisper);
+      });
+    });
+
+    btnTriggerScreen.addEventListener('click', async () => {
+      const authToken = getAuthToken();
+      const headers = { 'ngrok-skip-browser-warning': 'true' };
+      if (authToken) headers['X-GlanceAI-Token'] = authToken;
+
+      try {
+        const res = await fetch('/api/capture', { method: 'POST', headers });
+        if (res.ok) {
+          showToast('📸 Screen snap requested on host!');
+        } else {
+          showToast(`⚠️ Capture request failed (HTTP ${res.status})`);
+        }
+      } catch (err) {
+        showToast('⚠️ Capture request failed: ' + err.message);
+      }
+    });
+
+    // --- Live Interviewer Audio Monitor Playback Engine ---
+
+    function updateAudioUI(active) {
+      if (active) {
+        btnListenToggle.classList.add('active');
+        listenBtnIcon.textContent = '⏹';
+        listenBtnText.textContent = 'Stop Listening';
+        audioLiveDot.className = 'audio-live-dot listening';
+        eqVisualizer.classList.add('active');
+        audioStatusLabel.textContent = '🔊 Streaming interviewer call audio in real time';
+        audioLatencyChip.textContent = 'Streaming Live';
+        audioLatencyChip.className = 'audio-chip audio-chip-active';
+      } else {
+        btnListenToggle.classList.remove('active');
+        listenBtnIcon.textContent = '▶';
+        listenBtnText.textContent = 'Listen Live';
+        audioLiveDot.className = 'audio-live-dot';
+        eqVisualizer.classList.remove('active');
+        audioStatusLabel.textContent = 'Audio stream paused • Click to listen';
+        audioLatencyChip.textContent = 'Standby';
+        audioLatencyChip.className = 'audio-chip audio-chip-latency';
+        document.querySelectorAll('.eq-bar').forEach(b => b.style.height = '4px');
+      }
+    }
+
+    function setupWebAudioAnalyser() {
+      if (analyserNode) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        audioContext = new AudioCtx();
+        audioSourceNode = audioContext.createMediaElementSource(liveAudioEl);
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 32;
+        analyserNode.smoothingTimeConstant = 0.8;
+        audioSourceNode.connect(analyserNode);
+        analyserNode.connect(audioContext.destination);
+
+        const freqData = new Uint8Array(analyserNode.frequencyBinCount);
+        const bars = document.querySelectorAll('.eq-bar');
+
+        function drawVisualizer() {
+          if (!isListening) return;
+          visualizerAnimFrame = requestAnimationFrame(drawVisualizer);
+          analyserNode.getByteFrequencyData(freqData);
+
+          for (let i = 0; i < bars.length; i++) {
+            const val = freqData[i] || 0;
+            const height = Math.max(4, Math.min(24, Math.round((val / 255) * 24)));
+            bars[i].style.height = `${height}px`;
+          }
+        }
+        drawVisualizer();
+      } catch (err) {
+        console.warn('[Mentor Audio] Web Audio analyser notice:', err);
+      }
+    }
+
+    let isServerStreamingAudio = false;
+    let stallWatchdogTimer = null;
+    let lastPlaybackTime = 0;
+    let lastProgressTimestamp = Date.now();
+
+    // The host sends one endless WebM/Opus response. Media Source Extensions play it within a fraction of a second and
+    // stay at the live edge. A plain <audio src> (the fallback where MSE is missing, e.g. older iPhones) treats it like a
+    // download, and Chrome's recorder output (one long cluster after a header from the stream's start) makes it freeze.
+    const MSE_MIME = 'audio/webm; codecs="opus"';
+    const canUseMse = typeof window.MediaSource === 'function' && MediaSource.isTypeSupported(MSE_MIME);
+    const LIVE_TARGET_DELAY = 0.3;  // seconds kept buffered behind the live edge
+    const LIVE_MAX_DELAY = 1.5;     // further behind than this: skip ahead to the target
+    const BUFFER_KEEP_SECONDS = 30; // played audio kept before trimming
+    let mseSession = null;
+    let lastMseRecoveryAt = 0;
+
+    function stopMseSession() {
+      if (!mseSession) return;
+      mseSession.active = false;
+      try { mseSession.controller.abort(); } catch (_) {}
+      try { URL.revokeObjectURL(mseSession.objectUrl); } catch (_) {}
+      mseSession = null;
+    }
+
+    function startMseSession(streamUrl) {
+      stopMseSession();
+      const mediaSource = new MediaSource();
+      const session = { active: true, controller: new AbortController(), objectUrl: URL.createObjectURL(mediaSource), queue: [], sourceBuffer: null, receivedBytes: 0 };
+      mseSession = session;
+      liveAudioEl.src = session.objectUrl;
+
+      mediaSource.addEventListener('sourceopen', () => {
+        if (!session.active) return;
+        try {
+          session.sourceBuffer = mediaSource.addSourceBuffer(MSE_MIME);
+          // Sequence mode lays each piece right after the last, so the recorder's timestamp jumps (the header from the
+          // stream's start, a fresh stream after a recorder restart) never leave a gap to wait through
+          session.sourceBuffer.mode = 'sequence';
+        } catch (err) {
+          console.warn('[Mentor Audio] MSE setup failed:', err.message || err);
+          return;
+        }
+        session.sourceBuffer.addEventListener('updateend', () => {
+          keepNearLiveEdge();
+          trimPlayedAudio(session);
+          appendNextChunk(session);
+        });
+        readMseStream(session, streamUrl);
+      }, { once: true });
+    }
+
+    async function readMseStream(session, streamUrl) {
+      try {
+        const res = await fetch(streamUrl, { signal: session.controller.signal, cache: 'no-store', headers: { 'ngrok-skip-browser-warning': 'true' } });
+        if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+        const reader = res.body.getReader();
+        while (session.active) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          queueStreamBytes(session, value);
+        }
+      } catch (err) {
+        if (session.active) console.warn('[Mentor Audio] Live stream interrupted:', err.message || err);
+      }
+      // A dropped connection is healed by the stall watchdog once the host streams again
+    }
+
+    // EBML magic opens every WebM stream; "EBMLVersion" (0x42 0x86) follows within the header
+    function findStreamHeader(bytes, from) {
+      for (let i = from; i + 12 <= bytes.length; i++) {
+        if (bytes[i] === 0x1A && bytes[i + 1] === 0x45 && bytes[i + 2] === 0xDF && bytes[i + 3] === 0xA3) {
+          for (let j = i + 4; j < i + 12; j++) if (bytes[j] === 0x42 && bytes[j + 1] === 0x86) return i;
+        }
+      }
+      return -1;
+    }
+
+    // When the extension restarts its recorder, a brand-new stream (header first) arrives inside this one. Resetting
+    // the parser right there lets it play straight on instead of stalling until a reconnect.
+    const PARSER_RESET = 'parser-reset';
+    function queueStreamBytes(session, bytes) {
+      let at = findStreamHeader(bytes, session.receivedBytes === 0 ? 1 : 0); // the response itself opens with a header
+      session.receivedBytes += bytes.length;
+      while (at !== -1) {
+        if (at > 0) session.queue.push(bytes.subarray(0, at));
+        session.queue.push(PARSER_RESET);
+        bytes = bytes.subarray(at);
+        at = findStreamHeader(bytes, 1);
+      }
+      session.queue.push(bytes);
+      appendNextChunk(session);
+    }
+
+    function appendNextChunk(session) {
+      const sourceBuffer = session.sourceBuffer;
+      if (!session.active || !sourceBuffer || sourceBuffer.updating || session.queue.length === 0) return;
+      while (session.queue[0] === PARSER_RESET) {
+        session.queue.shift();
+        try {
+          sourceBuffer.abort();
+        } catch (err) {
+          console.warn('[Mentor Audio] Parser reset failed, reconnecting:', err.message || err);
+          recoverMseSession();
+          return;
+        }
+      }
+      if (session.queue.length === 0) return;
+      const resetAt = session.queue.indexOf(PARSER_RESET);
+      const parts = session.queue.splice(0, resetAt === -1 ? session.queue.length : resetAt);
+      let chunk = parts[0];
+      if (parts.length > 1) {
+        chunk = new Uint8Array(parts.reduce((total, part) => total + part.length, 0));
+        let offset = 0;
+        for (const part of parts) { chunk.set(part, offset); offset += part.length; }
+      }
+      try {
+        sourceBuffer.appendBuffer(chunk);
+      } catch (err) {
+        if (err.name === 'QuotaExceededError') {
+          session.queue.unshift(chunk);
+          trimPlayedAudio(session, true);
+        } else {
+          console.warn('[Mentor Audio] Append failed, reconnecting:', err.message || err);
+          recoverMseSession();
+        }
+      }
+    }
+
+    function keepNearLiveEdge() {
+      const buffered = liveAudioEl.buffered;
+      if (!buffered.length) return;
+      const liveEdge = buffered.end(buffered.length - 1);
+      if (liveEdge - liveAudioEl.currentTime > LIVE_MAX_DELAY) {
+        liveAudioEl.currentTime = liveEdge - LIVE_TARGET_DELAY;
+      }
+    }
+
+    function trimPlayedAudio(session, force = false) {
+      const sourceBuffer = session.sourceBuffer;
+      const buffered = liveAudioEl.buffered;
+      if (!sourceBuffer || sourceBuffer.updating || !buffered.length) return;
+      const removeEnd = liveAudioEl.currentTime - (force ? 5 : BUFFER_KEEP_SECONDS);
+      if (removeEnd > buffered.start(0) + (force ? 0 : 10)) {
+        try { sourceBuffer.remove(buffered.start(0), removeEnd); } catch (_) {}
+      }
+    }
+
+    // A decode error ends a Media Source stream for good: start a fresh one (the host re-sends its header first)
+    function recoverMseSession() {
+      if (!isListening || Date.now() - lastMseRecoveryAt < 3000) return;
+      lastMseRecoveryAt = Date.now();
+      startLiveAudio(true);
+    }
+
+    function startLiveAudio(isAutoReconnect = false) {
+      const authToken = getAuthToken();
+      const streamUrl = authToken
+        ? `/api/mentor/audio-stream?token=${encodeURIComponent(authToken)}&t=${Date.now()}`
+        : `/api/mentor/audio-stream?t=${Date.now()}`;
+
+      if (canUseMse) {
+        startMseSession(streamUrl);
+      } else {
+        liveAudioEl.src = streamUrl;
+      }
+      liveAudioEl.volume = parseFloat(audioVolSlider.value) / 100;
+      liveAudioEl.muted = isMuted;
+
+      liveAudioEl.play().then(() => {
+        isListening = true;
+        updateAudioUI(true);
+        setupWebAudioAnalyser();
+        if (audioContext && audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        lastProgressTimestamp = Date.now();
+        if (!isAutoReconnect) {
+          showToast('🎧 Connected to live interviewer audio feed');
+        }
+      }).catch((err) => {
+        console.warn('[Mentor Audio] Playback error:', err);
+        if (!isAutoReconnect) {
+          isListening = false;
+          updateAudioUI(false);
+          audioStatusLabel.textContent = 'Playback notice: ' + (err.message || 'Click Listen Live again');
+          showToast('⚠️ Audio playback blocked: ' + err.message);
+        }
+      });
+    }
+
+    function stopLiveAudio() {
+      isListening = false;
+      stopMseSession();
+      try {
+        liveAudioEl.pause();
+        liveAudioEl.removeAttribute('src');
+        liveAudioEl.load();
+      } catch (_) {}
+      updateAudioUI(false);
+      if (visualizerAnimFrame) {
+        cancelAnimationFrame(visualizerAnimFrame);
+        visualizerAnimFrame = null;
+      }
+      showToast('🔇 Interviewer audio disconnected');
+    }
+
+    function toggleLiveAudio() {
+      if (isListening) {
+        stopLiveAudio();
+      } else {
+        startLiveAudio(false);
+      }
+    }
+
+    // Auto-latency correction: keep mentor at the true live edge (<200ms latency)
+    liveAudioEl.addEventListener('timeupdate', () => {
+      if (!isListening || mseSession) return;
+      if (liveAudioEl.buffered.length > 0) {
+        const liveEdge = liveAudioEl.buffered.end(liveAudioEl.buffered.length - 1);
+        const drift = liveEdge - liveAudioEl.currentTime;
+        if (drift > 1.2) {
+          liveAudioEl.currentTime = Math.max(0, liveEdge - 0.08);
+        }
+      }
+    });
+
+    liveAudioEl.addEventListener('waiting', () => {
+      if (isListening) audioStatusLabel.textContent = '⏳ Buffering incoming audio packets...';
+    });
+
+    liveAudioEl.addEventListener('playing', () => {
+      if (isListening) {
+        audioStatusLabel.textContent = '🔊 Streaming interviewer call audio in real time';
+        lastProgressTimestamp = Date.now();
+      }
+    });
+
+    liveAudioEl.addEventListener('ended', () => {
+      if (isListening) stopLiveAudio();
+    });
+
+    liveAudioEl.addEventListener('error', () => {
+      if (isListening) {
+        audioStatusLabel.textContent = 'Audio stream re-syncing with host...';
+        if (mseSession) recoverMseSession();
+      }
+    });
+
+    // Stall watchdog: automatically heals disconnected or frozen audio streams
+    stallWatchdogTimer = setInterval(() => {
+      if (!isListening) return;
+      if (liveAudioEl.currentTime !== lastPlaybackTime) {
+        lastPlaybackTime = liveAudioEl.currentTime;
+        lastProgressTimestamp = Date.now();
+      } else if (isServerStreamingAudio) {
+        const stallMs = Date.now() - lastProgressTimestamp;
+        if (stallMs > 4500) {
+          console.log('[Mentor Audio] Stalled stream detected, auto-resyncing...');
+          startLiveAudio(true);
+          lastProgressTimestamp = Date.now();
+        }
+      }
+    }, 2000);
+
+    btnListenToggle.addEventListener('click', toggleLiveAudio);
+
+    audioVolSlider.addEventListener('input', () => {
+      const val = parseInt(audioVolSlider.value, 10);
+      volValue.textContent = `${val}%`;
+      liveAudioEl.volume = val / 100;
+      if (val === 0) {
+        btnVolMute.textContent = '🔇';
+        isMuted = true;
+      } else {
+        btnVolMute.textContent = '🔊';
+        isMuted = false;
+      }
+    });
+
+    btnVolMute.addEventListener('click', () => {
+      if (isMuted) {
+        isMuted = false;
+        liveAudioEl.muted = false;
+        const restored = Math.max(10, Math.round(preMuteVolume * 100));
+        audioVolSlider.value = restored;
+        volValue.textContent = `${restored}%`;
+        liveAudioEl.volume = restored / 100;
+        btnVolMute.textContent = '🔊';
+      } else {
+        isMuted = true;
+        liveAudioEl.muted = true;
+        preMuteVolume = liveAudioEl.volume || 0.85;
+        audioVolSlider.value = 0;
+        volValue.textContent = '0%';
+        btnVolMute.textContent = '🔇';
+      }
+    });
+
+    // Poll /api/mentor/audio-status to keep stream metadata fresh
+    async function checkAudioStatus() {
+      const authToken = getAuthToken();
+      const headers = { 'ngrok-skip-browser-warning': 'true' };
+      if (authToken) headers['X-GlanceAI-Token'] = authToken;
+
+      try {
+        const res = await fetch('/api/mentor/audio-status', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          isServerStreamingAudio = !!data.isStreaming;
+          if (data.isStreaming) {
+            if (!isListening) {
+              audioStatusLabel.textContent = `Interviewer speaking • ${(data.packetsCount || 0)} chunks captured • Click Listen Live`;
+            }
+            audioLiveDot.className = isListening ? 'audio-live-dot listening' : 'audio-live-dot active';
+          } else {
+            if (!isListening) {
+              audioStatusLabel.textContent = data.hasHeader 
+                ? 'Tab audio standby • Waiting for interviewer to speak'
+                : 'Tab audio extension idle • Waiting for candidate tab capture';
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    setInterval(checkAudioStatus, 4000);
+    setTimeout(checkAudioStatus, 1200);
+
+    initSSE();
+  </script>
+</body>
+</html>

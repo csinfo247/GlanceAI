@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' ws: wss: http: https:;">
+  <title>GlanceAI - Elite Technical Interview & Developer HUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="vendor/marked.min.js"></script>
+  <script src="vendor/purify.min.js"></script>
+  <script src="lib/interview-engine.js"></script>
+</head>
+<body>
+  <div class="hud-container" id="hud-container">
+    
+    <!-- Notch Pill Gaze-Lock Overlay (Appears when Cmd+Alt+N is active) -->
+    <!-- Top line sits closest to the camera, so the spoken answer comes first -->
+    <div class="notch-pill-view" id="notch-pill-view" style="display: none;">
+      <div class="notch-say is-placeholder" id="notch-bullet-1">Waiting for the interview question...</div>
+      <div class="notch-detail" id="notch-bullet-2" style="display: none;"></div>
+      <div class="notch-cues" id="notch-cues" style="display: none;"></div>
+      <div class="notch-footer">
+        <div class="notch-footer-drag" id="notch-drag-handle">
+          <span class="notch-pill-dot" id="notch-status-dot">●</span>
+          <span class="notch-question" id="notch-question">Gaze-Lock</span>
+        </div>
+        <button class="notch-pill-btn" id="btn-expand-notch" title="Expand Full HUD (Cmd+Alt+N)">✕</button>
+      </div>
+    </div>
+
+    <!-- Top Draggable Handle Bar (Minimalist Executive HUD) -->
+    <header class="hud-header" id="hud-drag-handle">
+      <div class="hud-header-left">
+        <div class="hud-brand">
+          <span class="brand-shield" id="system-status-dot" title="Screen-Safe: Invisible to Zoom, Teams & Meet">●</span>
+          <span class="brand-text">GLANCEAI</span>
+        </div>
+        <span class="hud-status-chip" id="badge-passthrough" title="Cmd+Alt+M to toggle click-through">
+          <kbd>⌥⌘M</kbd> <span>Passthrough</span>
+        </span>
+      </div>
+
+      <div class="hud-header-right">
+        <span class="hud-model-chip" id="badge-model">qwen 27b</span>
+        <button class="icon-btn btn-notch" id="btn-toggle-notch" title="Gaze-Lock Notch Mode (Cmd+Alt+N)">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13">
+            <path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+          </svg>
+        </button>
+        <button class="icon-btn btn-capture" id="btn-manual-capture" title="Capture Screen & Analyze (Cmd+Alt+C)">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13">
+            <path fill="currentColor" d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-toggle-config" title="Settings & Hardware">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13">
+            <path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </button>
+        <button class="icon-btn btn-minimize" id="btn-minimize-window" title="Minimize Overlay">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="M19 13H5v-2h14v2z"/>
+          </svg>
+        </button>
+        <button class="icon-btn btn-close" id="btn-close-window" title="Close GlanceAI">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Vertical Scrollable Workspace with 3 Independent Panes -->
+    <main class="hud-main">
+
+      <!-- PANE 1: STATUS & CONFIGURATION BAR (Collapsed by default for stealth) -->
+      <section class="hud-pane pane-config collapsed" id="pane-config">
+        <div class="config-header">
+          <span class="pane-section-title">HARDWARE & MODEL SETTINGS</span>
+          <span class="config-collapse-hint">Click ⚙️ to Close</span>
+        </div>
+
+        <!-- Audio Device Interface -->
+        <div class="config-group">
+          <div class="config-label-row">
+            <label for="audio-device-select">Audio Capture Input</label>
+            <div class="audio-badge-wrap">
+              <button class="btn-text-action" id="btn-request-audio-perm" title="Request macOS permission & refresh device labels">Grant / Refresh</button>
+              <span class="device-status-badge" id="audio-pipeline-badge">Audio: Standby</span>
+            </div>
+          </div>
+          <div class="select-wrapper">
+            <select id="audio-device-select" class="hud-select">
+              <option value="">Probing audio hardware...</option>
+            </select>
+          </div>
+          <div class="loopback-guide-hint" id="loopback-guide-hint" style="display: block; margin-top: 6px;">
+            <span>💡 <strong>Call Audio Isolation:</strong> Set your Zoom/Meet speaker output to <kbd>BlackHole 2ch</kbd> (Mac) or <kbd>VB-Cable</kbd> (Win) and select it above so GlanceAI only transcribes the interviewer.</span>
+          </div>
+        </div>
+
+        <!-- API Keys & Inference Model -->
+        <div class="config-group">
+          <div class="config-label-row">
+            <label for="input-groq-key">GROQ_API_KEY (Primary Account)</label>
+            <span class="key-status-badge" id="groq-key-status">Required</span>
+          </div>
+          <div class="input-with-button">
+            <input type="password" id="input-groq-key" class="hud-input" placeholder="gsk_... (Primary Account)" autocomplete="off" spellcheck="false">
+            <button class="btn-input-action" id="btn-save-groq-key" title="Save Key">Save</button>
+          </div>
+        </div>
+
+        <div class="config-group">
+          <div class="config-label-row">
+            <label for="input-groq-backup-key">GROQ_BACKUP_KEYS (comma-separated)</label>
+            <span class="key-status-badge" id="groq-backup-key-status">Optional</span>
+          </div>
+          <div class="input-with-button">
+            <input type="password" id="input-groq-backup-key" class="hud-input" placeholder="gsk_... or gsk_..., gsk_... (tried in order)" autocomplete="off" spellcheck="false">
+            <button class="btn-input-action" id="btn-save-groq-backup-key" title="Save Backup Key">Save</button>
+          </div>
+        </div>
+
+        <div class="config-group">
+          <div class="config-label-row">
+            <label for="input-deepgram-key">DEEPGRAM_API_KEY (Live Speech-to-Text)</label>
+            <span class="key-status-badge" id="deepgram-key-status">Optional</span>
+          </div>
+          <div class="input-with-button">
+            <input type="password" id="input-deepgram-key" class="hud-input" placeholder="Optional or paste key..." autocomplete="off" spellcheck="false">
+            <button class="btn-input-action" id="btn-save-deepgram-key" title="Save Key">Save</button>
+          </div>
+        </div>
+
+        <div class="config-group">
+          <div class="config-label-row">
+            <label for="input-google-ai-key">GOOGLE_AI_KEY (Vision Fallback — Free)</label>
+            <span class="key-status-badge" id="google-ai-key-status">Optional</span>
+          </div>
+          <div class="input-with-button">
+            <input type="password" id="input-google-ai-key" class="hud-input" placeholder="AIza... (Gemini 2.0 Flash)" autocomplete="off" spellcheck="false">
+            <button class="btn-input-action" id="btn-save-google-ai-key" title="Save Key">Save</button>
+          </div>
+        </div>
+
+        <div class="config-group config-row-compact">
+          <div class="config-col">
+            <label for="select-text-model">Text Model</label>
+            <select id="select-text-model" class="hud-select-sm">
+              <option value="qwen/qwen3.8-27b" selected>qwen/qwen3.8-27b (Lightning Fast 368 t/s)</option>
+              <option value="openai/gpt-oss-20b">openai/gpt-oss-20b (Ultra-Fast 20B)</option>
+              <option value="openai/gpt-oss-120b">openai/gpt-oss-120b (Reasoning 120B)</option>
+            </select>
+          </div>
+          <div class="config-col">
+            <label for="select-vision-model">Vision OCR Model</label>
+            <select id="select-vision-model" class="hud-select-sm">
+              <option value="qwen/qwen3.8-27b" selected>qwen/qwen3.8-27b (Multimodal Vision)</option>
+            </select>
+          </div>
+          <div class="config-col">
+            <label for="select-code-language">DSA Language</label>
+            <select id="select-code-language" class="hud-select-sm">
+              <option value="cpp" selected>C++ (C++17/20 STL)</option>
+              <option value="python">Python 3</option>
+              <option value="java">Java</option>
+              <option value="go">Go</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- HUD Opacity & Glassmorphism Controls -->
+        <div class="config-group">
+          <div class="config-label-row">
+            <label for="input-opacity-slider">HUD Window Opacity</label>
+            <span class="key-status-badge ready" id="opacity-val-badge">95%</span>
+          </div>
+          <div class="opacity-control-row">
+            <input type="range" id="input-opacity-slider" class="hud-range" min="20" max="100" value="95" step="5">
+          </div>
+          <div class="opacity-presets">
+            <button class="preset-btn" data-opacity="1.0">100% Solid</button>
+            <button class="preset-btn" data-opacity="0.85">85% Optimal</button>
+            <button class="preset-btn" data-opacity="0.60">60% Clear</button>
+            <button class="preset-btn" data-opacity="0.35">35% Ghost</button>
+          </div>
+        </div>
+
+        <!-- Response Mode & Adaptive Strategy -->
+        <div class="config-group">
+          <div class="config-label-row">
+            <label for="select-response-mode">Response Mode</label>
+            <span class="key-status-badge ready" id="mode-status-badge">Adaptive</span>
+          </div>
+          <select id="select-response-mode" class="hud-select">
+            <option value="interview_teleprompter" selected>🎙️ Live Interview Teleprompter (Glance-and-Speak Bullets)</option>
+            <option value="adaptive">🧠 Smart Adaptive (Auto-detects Questions vs Coding vs Theory)</option>
+            <option value="coding">💻 Algorithm & LeetCode (Rigid O(N) Complexity & C++ Code)</option>
+            <option value="system_design">🏗️ System Design & Architecture (Scalability & Trade-offs)</option>
+            <option value="project_behavioral">💼 Project & Behavioral (STAR format with your project context)</option>
+          </select>
+        </div>
+
+        <!-- RESUME & CANDIDATE INTELLIGENCE -->
+        <div class="config-group resume-intelligence-group" id="resume-intelligence-group">
+          <div class="config-label-row">
+            <div class="config-label-with-icon">
+              <span class="section-badge-icon">📄</span>
+              <label>Resume & Candidate Grounding</label>
+            </div>
+            <span class="key-status-badge" id="resume-status-badge">No Resume</span>
+          </div>
+
+          <!-- Upload Dropzone -->
+          <div class="resume-dropzone" id="resume-dropzone">
+            <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt,.md,.text,.markdown" style="display: none;">
+            <div class="dropzone-content" id="dropzone-content">
+              <div class="dropzone-icon-wrap">
+                <svg class="dropzone-icon" viewBox="0 0 24 24" width="22" height="22">
+                  <path fill="currentColor" d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+              </div>
+              <div class="dropzone-text">
+                <span class="dropzone-title"><strong>Drop your Resume here</strong> or <span class="dropzone-browse-link" id="btn-browse-resume">browse file</span></span>
+                <span class="dropzone-sub">PDF, DOCX, TXT, or Markdown • Instant parsing & skill detection</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parsed Resume Profile Card (Visible when resume loaded) -->
+          <div class="resume-profile-card" id="resume-profile-card" style="display: none;">
+            <div class="resume-card-header">
+              <div class="resume-file-info">
+                <span class="resume-file-badge" id="resume-file-badge">PDF</span>
+                <div class="resume-file-names">
+                  <span class="resume-filename" id="resume-filename">Resume.pdf</span>
+                  <span class="resume-filesize" id="resume-filesize">0 KB • Grounded</span>
+                </div>
+              </div>
+              <div class="resume-card-actions">
+                <button class="btn-resume-action" id="btn-resume-pitch" title="Generate 60s elevator pitch grounded in this resume">
+                  <span>⚡ 60s Pitch</span>
+                </button>
+                <button class="icon-btn-sm" id="btn-toggle-resume-editor" title="Toggle Extracted Context Editor">
+                  <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+                <button class="icon-btn-sm" id="btn-replace-resume" title="Upload a different resume">
+                  <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                </button>
+                <button class="icon-btn-sm btn-danger" id="btn-delete-resume" title="Remove Resume">
+                  <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Resume Intelligence Badges -->
+            <div class="resume-intelligence-summary" id="resume-intelligence-summary">
+              <div class="resume-meta-row" id="resume-headline-row" style="display: none;">
+                <span class="resume-meta-tag">PROFILE</span>
+                <span class="resume-candidate-title" id="resume-candidate-title">Candidate</span>
+              </div>
+              <div class="resume-meta-row" id="resume-skills-row" style="display: none;">
+                <span class="resume-meta-tag">DETECTED STACK</span>
+                <div class="resume-skill-chips" id="resume-skill-chips"></div>
+              </div>
+              <div class="resume-meta-row" id="resume-metrics-row" style="display: none;">
+                <span class="resume-meta-tag">METRICS</span>
+                <span class="resume-metrics-count" id="resume-metrics-count">0 impact metrics identified</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extracted Text Area (collapsible / expandable) -->
+          <div class="resume-editor-wrap" id="resume-editor-wrap">
+            <div class="config-label-row" style="margin-top: 6px; margin-bottom: 4px;">
+              <label for="input-project-context" style="font-size: 11px;">Candidate & Grounding Context</label>
+              <div class="editor-status-wrap">
+                <span class="key-status-badge" id="project-context-status">Optional</span>
+              </div>
+            </div>
+            <textarea id="input-project-context" class="hud-textarea" rows="3" placeholder="Drop your resume above or paste project details here. GlanceAI uses this to ground STAR answers, system design trade-offs, and behavioral responses in your real experience!"></textarea>
+            <div class="context-helper-bar">
+              <span class="context-char-count" id="context-char-count">0 characters</span>
+              <button class="btn-text-action" id="btn-save-project-context">Save Context</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TARGET JOB DESCRIPTION (JD) & ROLE GROUNDING -->
+        <div class="config-group jd-intelligence-group" id="jd-intelligence-group">
+          <div class="config-label-row">
+            <div class="config-label-with-icon">
+              <span class="section-badge-icon">🎯</span>
+              <label>Target Job Description (JD) & Role</label>
+            </div>
+            <span class="key-status-badge" id="jd-status-badge">No JD</span>
+          </div>
+
+          <!-- JD Dropzone -->
+          <div class="jd-dropzone" id="jd-dropzone">
+            <input type="file" id="jd-file-input" accept=".pdf,.docx,.txt,.md,.text,.markdown" style="display: none;">
+            <div class="dropzone-content" id="jd-dropzone-content">
+              <div class="dropzone-icon-wrap jd-icon-wrap">
+                <svg class="dropzone-icon" viewBox="0 0 24 24" width="22" height="22">
+                  <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+              </div>
+              <div class="dropzone-text">
+                <span class="dropzone-title"><strong>Drop Job Description here</strong> or <span class="dropzone-browse-link" id="btn-browse-jd">browse file</span></span>
+                <span class="dropzone-sub">PDF, DOCX, TXT, or paste LinkedIn/Greenhouse text below</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parsed JD Profile Card (Visible when JD loaded) -->
+          <div class="jd-profile-card" id="jd-profile-card" style="display: none;">
+            <div class="resume-card-header">
+              <div class="resume-file-info">
+                <span class="jd-file-badge" id="jd-file-badge">JD</span>
+                <div class="resume-file-names">
+                  <span class="resume-filename" id="jd-filename">Job_Description.txt</span>
+                  <span class="resume-filesize" id="jd-filesize">Grounded</span>
+                </div>
+              </div>
+              <div class="resume-card-actions">
+                <button class="btn-jd-action" id="btn-jd-pitch" title="Generate tailored 'Why this role?' pitch matching JD & Resume">
+                  <span>🎯 Why This Role</span>
+                </button>
+                <button class="icon-btn-sm" id="btn-toggle-jd-editor" title="Toggle Extracted JD Text Editor">
+                  <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+                <button class="icon-btn-sm" id="btn-replace-jd" title="Upload a different JD">
+                  <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                </button>
+                <button class="icon-btn-sm btn-danger" id="btn-delete-jd" title="Remove JD">
+                  <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- JD Intelligence Summary -->
+            <div class="resume-intelligence-summary" id="jd-intelligence-summary">
+              <div class="resume-meta-row" id="jd-title-row" style="display: none;">
+                <span class="resume-meta-tag jd-tag">TARGET ROLE</span>
+                <span class="resume-candidate-title" id="jd-role-title">Software Engineer</span>
+              </div>
+              <div class="resume-meta-row" id="jd-company-row" style="display: none;">
+                <span class="resume-meta-tag jd-tag">COMPANY</span>
+                <span class="resume-candidate-title" id="jd-company-name">Target Company</span>
+              </div>
+              <div class="resume-meta-row" id="jd-skills-row" style="display: none;">
+                <span class="resume-meta-tag jd-tag">REQUIRED STACK</span>
+                <div class="resume-skill-chips" id="jd-skill-chips"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- JD Editor / Direct Paste Textarea -->
+          <div class="jd-editor-wrap" id="jd-editor-wrap">
+            <div class="config-label-row" style="margin-top: 6px; margin-bottom: 4px;">
+              <label for="input-jd-context" style="font-size: 11px;">Job Description Text / Requirements</label>
+              <div class="editor-status-wrap">
+                <span class="key-status-badge" id="jd-context-status">Optional</span>
+              </div>
+            </div>
+            <textarea id="input-jd-context" class="hud-textarea" rows="3" placeholder="Drop the JD file above or paste the job description / requirements here. GlanceAI will tailor every answer, system design round, and behavioral pitch to this exact role!"></textarea>
+            <div class="context-helper-bar">
+              <span class="context-char-count" id="jd-char-count">0 characters</span>
+              <button class="btn-text-action" id="btn-save-jd-context">Save JD</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LAN Companion & Remote Mobile Viewer -->
+        <div class="config-group">
+          <div class="config-label-row">
+            <label>LAN Companion & Duo Mode (Mentor Portal)</label>
+            <span class="key-status-badge ready" id="companion-status-badge">Live</span>
+          </div>
+          <div class="companion-url-box">
+            <span id="companion-primary-url">http://localhost:4242</span>
+            <button class="preset-btn" id="btn-copy-companion-url" style="width: auto; padding: 2px 10px;">Copy Mobile</button>
+            <button class="preset-btn" id="btn-copy-mentor-url" style="width: auto; padding: 2px 10px; background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); color: #f59e0b;">🛡️ Copy Mentor</button>
+            <button class="preset-btn" id="btn-toggle-companion" style="width: auto; padding: 2px 10px; background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">🌐 Mode</button>
+          </div>
+          <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px; display: flex; justify-content: space-between;">
+            <span>Phone: / | Duo Mentor Portal: /mentor (Protected by Token)</span>
+            <span id="companion-clients-count">0 connected</span>
+          </div>
+        </div>
+
+        <!-- Network Proxy Configuration -->
+        <div class="config-group">
+          <div class="config-label-row">
+            <label for="input-proxy-url">Outbound Proxy (HTTP/HTTPS/SOCKS5)</label>
+            <span class="key-status-badge" id="proxy-status-badge">Direct</span>
+          </div>
+          <div class="input-with-action">
+            <input
+              type="text"
+              id="input-proxy-url"
+              class="hud-input"
+              placeholder="e.g. http://192.168.1.50:8080 or socks5://127.0.0.1:1080"
+              spellcheck="false"
+            />
+            <button class="btn-save-key" id="btn-save-proxy" title="Save and apply proxy settings">Apply</button>
+          </div>
+        </div>
+
+        <!-- Hotkey Reference Chips -->
+        <div class="hotkey-chips">
+          <div class="hotkey-chip" title="Toggle Click-Through: Mouse clicks pass right through overlay">
+            <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>M</kbd>
+            <span>Click-Thru</span>
+          </div>
+          <div class="hotkey-chip" title="Capture screen and stream Groq vision analysis">
+            <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd>
+            <span>Capture OCR</span>
+          </div>
+          <div class="hotkey-chip" title="Force solve latest audio immediately without waiting">
+            <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>S</kbd>
+            <span>Force Solve</span>
+          </div>
+          <div class="hotkey-chip" title="Toggle Candidate Speaking (Pause Auto-Pilot while thinking out loud)">
+            <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>P</kbd>
+            <span>Candidate Mute</span>
+          </div>
+          <div class="hotkey-chip" title="Panic screen clear: Instantly clear solution & abort stream">
+            <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>X</kbd>
+            <span>Panic Clear</span>
+          </div>
+          <div class="hotkey-chip" title="Gaze-Lock Notch Mode: Shrinks HUD to a compact pill directly below the camera with the line to say and keyword cues">
+            <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd>
+            <span>Notch Mode</span>
+          </div>
+          <div class="hotkey-chip" title="Instant Test-Case Debugger: Snaps failed test case & provides 1-line fix">
+            <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>D</kbd>
+            <span>Instant Debug</span>
+          </div>
+          <div class="hotkey-chip" title="Toggle GlanceAI visibility">
+            <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>H</kbd>
+            <span>Hide/Show</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANE 2: GROQ MULTIMODAL CODE SOLUTION STREAM (REASONING AT TOP) -->
+      <section class="hud-pane pane-solution" id="pane-solution">
+        <div class="pane-header">
+          <div class="pane-title-wrap">
+            <svg class="icon-svg icon-pane" viewBox="0 0 24 24" width="14" height="14">
+              <path fill="currentColor" d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+            </svg>
+            <span class="pane-title">GROQ REASONING ENGINE</span>
+          </div>
+          <div class="solution-actions">
+            <div class="screenshot-pill" id="screenshot-preview-pill" style="display: none;" title="View Captured Screenshot">
+              <img id="screenshot-thumbnail-img" src="" alt="Capture">
+              <span>Screen Attached</span>
+            </div>
+            <button class="btn-clean-copy" id="btn-clean-copy" title="Copy Clean Function Only (Zero Comments) - Cmd+Alt+C">
+              ⚡ CLEAN CODE
+            </button>
+            <button class="icon-btn-sm" id="btn-copy-solution" title="Copy Raw Solution">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12">
+                <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+            </button>
+            <button class="icon-btn-sm" id="btn-clear-solution" title="Clear Solution">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12">
+                <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Prompt Input bar for instant question query -->
+        <div class="solution-input-bar">
+          <input type="text" id="input-custom-query" class="hud-input-sm" placeholder="Ask follow-up question or press Cmd+Alt+C to analyze screen..." spellcheck="false">
+          <button class="btn btn-sm btn-primary" id="btn-run-query">Stream</button>
+        </div>
+
+        <!-- Resume Grounded Quick Action Prompts -->
+        <div class="solution-quick-prompts" id="solution-quick-prompts">
+          <button class="quick-prompt-chip" id="chip-resume-pitch" title="Generate crisp 60s spoken pitch for 'Tell me about yourself'">
+            <span>⚡ 60s Pitch</span>
+          </button>
+          <button class="quick-prompt-chip" id="chip-star-stories" title="Suggest top STAR behavioral stories from your resume">
+            <span>💼 STAR Stories</span>
+          </button>
+          <button class="quick-prompt-chip" id="chip-stack-defense" title="Defend production choices of your resume tech stack">
+            <span>🏗️ Stack Defense</span>
+          </button>
+          <button class="quick-prompt-chip" id="chip-why-this-role" title="Generate tailored 'Why do you want this role / Why should we hire you?' matching JD & Resume">
+            <span>🎯 Why This Role</span>
+          </button>
+        </div>
+
+        <!-- Solution Rendering Output Area -->
+        <div class="solution-render-container" id="solution-render-box">
+          <div class="solution-empty-state" id="solution-empty-state">
+            <div class="empty-icon">⚡</div>
+            <p class="empty-title">Ultra-Low-Latency Inference Ready</p>
+            <p class="empty-subtitle">Trigger <kbd>Cmd</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd> anywhere on macOS to snap screen content, or click <strong>Stream</strong> with your query.</p>
+          </div>
+
+          <!-- Remote Mentor Whisper Card (Duo Mode) -->
+          <div class="mentor-whisper-card" id="mentor-whisper-card" style="display: none;">
+            <div class="whisper-header">
+              <span class="whisper-icon">🛡️</span>
+              <span class="whisper-badge">MENTOR WHISPER</span>
+              <span class="whisper-author" id="whisper-author">Mentor</span>
+              <button class="whisper-dismiss" id="btn-dismiss-whisper" title="Dismiss Hint">✕</button>
+            </div>
+            <div class="whisper-body" id="whisper-text">...</div>
+          </div>
+
+          <div class="active-question-card" id="active-question-card" style="display: none;">
+            <span class="q-icon">🎯</span>
+            <div class="q-details">
+              <span class="q-label">Current Question</span>
+              <span class="q-text" id="active-question-text">Interviewer Question</span>
+            </div>
+          </div>
+          <!-- Glance Anchors Strip: 3-Word Sub-300ms Memory Anchor Chips -->
+          <div class="glance-anchors-strip" id="glance-anchors-strip" style="display: none;"></div>
+          <div class="solution-content markdown-body" id="solution-markdown-body" style="display: none;"></div>
+          <div class="streaming-cursor-wrap" id="streaming-cursor" style="display: none;">
+            <span class="streaming-dot"></span>
+            <span class="streaming-text">Groq streaming ultra-low-latency tokens...</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANE 3: LIVE AUDIO TRANSCRIPTION LOG (AUDIO AT BOTTOM) -->
+      <section class="hud-pane pane-transcript collapsed" id="pane-transcript">
+        <div class="pane-header">
+          <div class="pane-title-wrap">
+            <span class="transcript-status-indicator" id="transcript-listening-pulse"></span>
+            <span class="pane-title" title="Live Audio Transcript">TRANSCRIPT</span>
+            <!-- Collapsed view: the latest line heard, so the answer keeps the window -->
+            <span class="transcript-last-heard" id="transcript-last-heard"><span class="last-heard-empty">Waiting for audio — click Start Listening</span></span>
+          </div>
+          <div class="transcript-meta">
+            <span class="tab-audio-badge" id="tab-audio-badge" title="Chrome Extension Google Meet / Call Audio Bridge" style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25);">🎧 Tab: Standby</span>
+            <button class="btn btn-audio-toggle" id="btn-toggle-audio">
+              <span class="audio-btn-dot" id="audio-btn-dot"></span>
+              <span id="btn-audio-text">Start Listening</span>
+            </button>
+            <button class="btn-speaker-mode" id="btn-speaker-mode" title="Toggle Candidate Speaking (Cmd+Alt+P)">
+              <span class="speaker-dot"></span>
+              <span id="speaker-mode-text">Interviewer</span>
+            </button>
+            <button class="btn-new-turn" id="btn-new-transcript-turn" title="Start fresh turn (Cmd+K / Ctrl+K)">
+              <span>⚡ New Turn</span>
+            </button>
+            <button class="icon-btn-sm" id="btn-clear-transcript" title="Clear audio log">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11">
+                <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+              </svg>
+            </button>
+            <span id="current-channel-label" style="display: none;">Mic / Loopback</span>
+            <div id="vu-fill" style="display: none;"></div>
+            <button class="icon-btn-sm transcript-expand-btn" id="btn-toggle-transcript" title="Show full transcript">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12">
+                <path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="transcript-stream-container" id="transcript-log">
+          <!-- Transcripts auto-populate here -->
+          <div class="transcript-empty-state" id="transcript-empty-state">
+            <div class="empty-icon">🎙️</div>
+            <p class="empty-title">Ready for conversation</p>
+            <p class="empty-subtitle">Click "Start Listening" above or feed your call audio via BlackHole / VB-Cable.</p>
+          </div>
+        </div>
+
+        <div class="transcript-footer">
+          <button class="btn btn-sm btn-force-solve" id="btn-force-solve" title="Emergency: Force solve latest audio immediately without waiting (Cmd+Alt+S or Enter)">
+            <span>⚡ Solve Audio (Enter)</span>
+          </button>
+          <button class="btn btn-sm btn-accent" id="btn-send-transcript-to-groq" style="display: none;">Reason</button>
+          <button class="btn-autopilot active" id="btn-toggle-autopilot" title="Hands-free auto-trigger when interviewer finishes asking a question">
+            <span class="autopilot-dot"></span>
+            <span id="autopilot-label">⚡ Auto-Pilot: ON</span>
+          </button>
+          <button class="btn-autowatch" id="btn-toggle-autowatch" title="Autonomous Coding Screen Watcher & Platform OCR (Silent LeetCode/HackerRank Solver)">
+            <span class="autowatch-dot"></span>
+            <span id="autowatch-label">👁️ Auto-Watch: OFF</span>
+          </button>
+          <span class="transcript-word-count" id="transcript-word-count" style="display: none;">0 words captured</span>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Overlay Click-Through Floating Toast -->
+    <div class="passthrough-toast" id="passthrough-toast">
+      <span class="toast-icon">🖱️</span>
+      <span class="toast-msg">Click-Through Active — Mouse clicks pass to background apps. Press <kbd>Cmd+Alt+M</kbd> to edit.</span>
+    </div>
+
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

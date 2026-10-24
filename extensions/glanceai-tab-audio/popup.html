@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GlanceAI Tab Audio Bridge</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #0f172a;
+      --border: rgba(255, 255, 255, 0.1);
+      --accent: #38bdf8;
+      --green: #10b981;
+      --red: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      width: 290px;
+      background: var(--bg);
+      color: var(--text);
+      padding: 14px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .icon {
+      font-size: 18px;
+    }
+
+    .title {
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    .status-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .status-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .status-dot.streaming {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.15); }
+    }
+
+    .info-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    .btn-toggle {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+      transition: all 0.15s;
+    }
+
+    .btn-toggle:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    .btn-toggle.stop {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+
+    .vu-meter-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .vu-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.1s;
+    }
+
+    .pair-card {
+      background: var(--card);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .pair-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .pair-row input {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 11px;
+    }
+
+    .pair-row button {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .pair-hint {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="icon">🎧</span>
+    <span class="title">GlanceAI Tab Audio</span>
+    <span class="badge">V1.0</span>
+  </div>
+
+  <div class="status-card">
+    <div class="status-row">
+      <span style="color: var(--text-muted);">GlanceAI Server</span>
+      <span id="server-status"><span class="status-dot active"></span>localhost:4242</span>
+    </div>
+    <div class="status-row">
+      <span style="color: var(--text-muted);">Pairing</span>
+      <span id="pair-status">Checking...</span>
+    </div>
+    <div class="status-row">
+      <span style="color: var(--text-muted);">Active Tab</span>
+      <span id="tab-name" style="font-weight: 600; color: #38bdf8; max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Detecting...</span>
+    </div>
+    <div class="status-row" style="margin-bottom: 0;">
+      <span style="color: var(--text-muted);">Stream State</span>
+      <span id="stream-status"><span class="status-dot" id="stream-dot"></span>Idle</span>
+    </div>
+    <div class="vu-meter-bar">
+      <div class="vu-fill" id="vu-fill"></div>
+    </div>
+  </div>
+
+  <div class="pair-card" id="pair-card" style="display: none;">
+    <div class="pair-row">
+      <input type="password" id="input-pair-token" placeholder="Paste GlanceAI link or token" autocomplete="off" spellcheck="false">
+      <button id="btn-pair">Pair</button>
+    </div>
+    <p class="pair-hint">One-time setup: in GlanceAI settings click <strong>Copy Mobile</strong>, then paste the link here.</p>
+  </div>
+
+  <p class="info-text">
+    Open your <strong>Google Meet</strong>, <strong>Zoom Web</strong>, or <strong>Teams</strong> call tab, click below, and interviewer audio will stream digitally into GlanceAI with zero cable setup.
+  </p>
+
+  <button class="btn-toggle" id="btn-toggle">
+    <span>🎙️ Stream Current Tab Audio</span>
+  </button>
+
+  <script src="popup.js"></script>
+</body>
+</html>

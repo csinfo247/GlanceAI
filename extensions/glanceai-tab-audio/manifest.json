@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "GlanceAI Tab Audio Bridge",
+  "version": "1.0.0",
+  "description": "Stream pristine digital interviewer audio directly from Google Meet, Zoom Web, and Teams into GlanceAI with zero virtual audio cables.",
+  "permissions": [
+    "tabCapture",
+    "activeTab",
+    "storage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "http://localhost:4242/*",
+    "http://127.0.0.1:4242/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "GlanceAI Tab Audio Bridge"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
