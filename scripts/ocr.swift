@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 GlanceAI Contributors
+// Copyright (c) 2026 the original upstream authors
+// See the LICENSE file in the project root for full license text.
 import Foundation
 import Vision
 import AppKit

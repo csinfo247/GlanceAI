@@ -31,3 +31,11 @@ After pulling GlanceAI updates that touch `extensions/`, click reload (↻) on t
 2. Click the **GlanceAI Tab Audio** extension icon in your Chrome toolbar, on the tab where the call is running.
 3. Click **🎙️ Stream Current Tab Audio**.
 4. GlanceAI's Tab badge switches to **🎧 Tab: Live**. The call audio is labeled `INTERVIEWER (MEET)`, and GlanceAI starts your mic automatically (unless you turned it off) so your answers are labeled `CANDIDATE`.
+
+---
+
+### License
+
+Part of GlanceAI, released under the [MIT License](../../LICENSE).<br>
+Copyright (c) 2026 GlanceAI Contributors<br>
+Copyright (c) 2026 the original upstream authors

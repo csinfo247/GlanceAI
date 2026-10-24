@@ -494,4 +494,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+GlanceAI is released under the [MIT License](LICENSE).
+
+Copyright (c) 2026 GlanceAI Contributors<br>
+Copyright (c) 2026 the original upstream authors
+
+GlanceAI bundles and depends on third-party software under their own licenses. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

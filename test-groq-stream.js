@@ -1,3 +1,9 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 GlanceAI Contributors
+ * Copyright (c) 2026 the original upstream authors
+ * See the LICENSE file in the project root for full license text.
+ */
 /**
  * GlanceAI - Groq Stream Pipeline Regression Test
  * Drives the REAL `start-groq-stream` IPC handler in main.js end-to-end, with Electron,

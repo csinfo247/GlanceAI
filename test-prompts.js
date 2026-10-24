@@ -1,3 +1,9 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 GlanceAI Contributors
+ * Copyright (c) 2026 the original upstream authors
+ * See the LICENSE file in the project root for full license text.
+ */
 /**
  * GlanceAI - Prompt ↔ Parser Contract Test
  * lib/prompts.js tells the model which sections and markers to emit; lib/interview-engine.js
